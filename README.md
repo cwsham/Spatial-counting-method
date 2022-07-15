@@ -17,5 +17,7 @@ Sample.xlsx --- Sample excel file imported from the result files
 Compile: g++ -o test test.c
 
 Command line: Test <option: 1 for 500m; 2 for 1000m; 3 for 1500m> <Year: 2003-2022> <1: state house; 2: AirBnB>
+
 --- Example: Test 1 2022 1 > result.txt
+
 --- Count the number of state houses at 0.5 km radial circle of each home that are built in or after 2022. The result.txt will store the outputs.
