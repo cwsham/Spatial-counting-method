@@ -20,18 +20,18 @@ class property {        // The class property
     string name;        // Attribute (string property name)
     float latitude;     // Attribute (float latitude)
     float longitude;    // Attribute (float longitude)
-    bool publichse;     // Attribute (bool public housing)
+    int type;           // Attribute (Normal residential: 0; public housing: 1; AirBnb: 2)
     int x;              // Attribute (x-coordinate of region)
     int y;              // Attribute (x-coordinate of region)
     int bltyear;        // Attribute (buit year)
 
     public:
-        void setvalue(int pID, string pName, float platitude, float plongitude, bool ppublichse, int pyear) { // set the values
+        void setvalue(int pID, string pName, float platitude, float plongitude, int ptype, int pyear) { // set the values
             ID = pID;
             name = pName;
             latitude = platitude;
             longitude = plongitude;
-            publichse = ppublichse;
+            type = ptype;
             bltyear = pyear;
         }
         void setregion(int region_x, int region_y) {
@@ -57,7 +57,7 @@ class property {        // The class property
             return ID;
         }
         int outpub() {
-            return publichse;
+            return type;
         }
         int outYear() {
             return bltyear;
@@ -131,14 +131,16 @@ int main(int argc, char *argv[]) {
 
     string rawfile1 = "./rawfiles/residential.csv";
     ifstream residentialfile(rawfile1);
-    string commandline = "Command line: Test <option: 1 for 500m; 2 for 1000m; 3 for 1500m> <Year: 2003-2022>\0";
+    string rawfile2 = "./rawfiles/AirBnB.csv";
+    ifstream airbnbfile(rawfile2);
+    string commandline = "Command line: Test <option: 1 for 500m; 2 for 1000m; 3 for 1500m> <Year: 2003-2022> <1: state house; 2: AirBnB>\0";
     string line;
     string datain[fieldNO];
     int i, j, k;
-    property *resident;
+    property *resident, *airbnb;
     cluster **region;
-    int residentNo;
-    int option, year;
+    int residentNo, airbnbNo;
+    int option, year, propertytype;
     int boundx, boundy;
     float coeffecient;
     struct timespec start, end;
@@ -164,8 +166,13 @@ int main(int argc, char *argv[]) {
             cout << commandline << endl;
             return 1;         
         }
-        if (argc > 3) {
-            grid_factor = stoi(argv[3]);
+        propertytype = stoi(argv[3]);
+        if ((propertytype < 1) || (propertytype > 3)) {
+            cout << commandline << endl;
+            return 1;         
+        }
+        if (argc > 4) {
+            grid_factor = stoi(argv[4]);
             if ((grid_factor < 1) || (grid_factor > 20)) {
                 cout << commandline << endl;
                 return 1;  
@@ -186,6 +193,7 @@ int main(int argc, char *argv[]) {
     boundy = ceil((range_ey - range_sy)/grid_y);
 
     resident = (property*)malloc(sizeof(property)*1000000);
+    airbnb = (property*)malloc(sizeof(property)*100000);
  
     cout << "Creating cluster (region size:" << option << "m)" << endl;
     region = (cluster**)malloc(sizeof(cluster*)*boundx);
@@ -223,7 +231,32 @@ int main(int argc, char *argv[]) {
     residentNo = i;
     cout << "Total number of residential properties read:" << residentNo << endl;
 
-
+    cout << "Reading file: " << rawfile2 << endl;
+// Use a while loop together with the getline() function to read the file line by line
+    getline (airbnbfile, line);
+    
+    i = 0;
+    while (getline (airbnbfile, line)) {
+        int region_x, region_y, airbnbID;
+        
+        split (line, ',', datain);
+        if (airbnbID != stoi(datain[2])) {
+            airbnbID = stoi(datain[2]);
+        
+            airbnb[i].setvalue(i, datain[2], abs(stof(datain[3])), abs(stof(datain[4])), 2, 2020);
+            if ((airbnb[i].outLong() > range_ex) || (airbnb[i].outLat() > range_ey)) {
+                cout << airbnb[i].outLong() << endl;
+                cout << airbnb[i].outLat() << endl;         
+            }
+            region_x = floor((airbnb[i].outLong()-range_sx)/grid_x);
+            region_y = floor((airbnb[i].outLat()-range_sy)/grid_y);
+            airbnb[i].setregion(region_x, region_y);
+            region[region_x][region_y].add(&(airbnb[i]));
+            i++;
+        }
+    }   
+    airbnbNo = i;
+    cout << "Total number of Airbnb read:" << airbnbNo << endl;
 /*
     for (i = 0; i < boundx; i++) {
         for (j = 0; j < boundy; j++) {
@@ -276,7 +309,7 @@ int main(int argc, char *argv[]) {
                             dist = calDistance(resident[i].outLat(), resident[i].outLong(), (*p2).outLat(), (*p2).outLong(), coeffecient);
                             if (dist < tdist) {
 //                            cout << resident[i].outLat() << " " << resident[i].outLong() << " " << (*p2).outLat() << " " << (*p2).outLong() << " " << dist << endl;
-                                if ((*p2).outpub() == 1) {
+                                if ((*p2).outpub() == propertytype) {
                                     pubCnt = pubCnt + 1;
                                 }
                                 neigCnt = neigCnt + 1;
@@ -285,15 +318,16 @@ int main(int argc, char *argv[]) {
                     }
                 }
             }
-        cout << resident[i].outID()  << ':';
-        cout << resident[i].outName() << ':';
-        cout << resident[i].outYear()  << ':';
-        cout << neigCnt << ':';
-        cout << pubCnt << endl;
+            cout << resident[i].outID()  << ':';
+            cout << resident[i].outName() << ':';
+            cout << resident[i].outYear()  << ':';
+            cout << neigCnt << ':';
+            cout << pubCnt << endl;
         }
     }
 
     free(resident);
+    free(airbnb);
     for (i = 0; i < boundx; i++) {
         free(region[i]);
     }
