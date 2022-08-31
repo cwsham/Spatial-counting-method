@@ -13,7 +13,7 @@ AirBnB.csv --- the AirBnB file in Auckland
 
 Out_500_2022.txt --- Sample redirected result file.
 
-Sample.xlsx --- Sample excel file imported from the result files
+Sample.xlsx --- Sample excel file imported from the result files (column header added manually)
 
 Compile: g++ -o test test.c
 
