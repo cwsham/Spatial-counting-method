@@ -1,4 +1,5 @@
-# Spatial-counting-method
+# Spatial-counting-method (AirBnB version)
+
 Density Effects on House Prices: A novel spatial counting method
 
 Abstract
